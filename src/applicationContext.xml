@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans">
+
+<!-- xml 파일은 setter를 이용한 의존성 주입에 대응한다
+	name 속성은 생성자의 이름
+	ref는 주입하는 오브젝트의 이름이다 -->
+
+	<!-- 사용자가 설정한 연결정보를 factory가 아닌 xml 로 하는 방법 -->
+	<!-- <bean id="connectionMaker" class="xmlTest.dao.DConnectionMaker" /> 
+	
+	<bean id="userDao" class="xmlTest.dao.UserDao">
+		<property name="connectionMaker" ref="connectionMaker" />
+	</bean> -->
+	
+	<!-- 사용자 정의 클래스가 아닌 설정정보를 xml로 하는 방법 
+		기본적으로 setter메소드라고 생각하면 된다. 
+		setter메소드의 타입을 스프링이 읽고 자동으로 변화해준다	-->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/dongko?characterEncoding=UTF-8&amp;serverTimezone=UTC" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean>
+	
+	<bean id="userDao" class="xmlTest.dao.UserDao">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+</beans>
