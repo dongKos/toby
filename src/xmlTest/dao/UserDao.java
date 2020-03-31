@@ -3,6 +3,7 @@ package xmlTest.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -15,7 +16,7 @@ public class UserDao {
 //		this.connectionMaker = connectionMaker;
 //	}
 	private SimpleDriverDataSource dataSource;
-	//DataSource ����ü�� ����ؼ� connection����
+	//DataSource 占쏙옙占쏙옙체占쏙옙 占쏙옙占쏙옙漫占� connection占쏙옙占쏙옙
 	public void setDataSource(SimpleDriverDataSource dataSource) {
 		this.dataSource = dataSource;
 	}
@@ -57,15 +58,24 @@ public class UserDao {
 		return user;
 	}
 	
-	public void deleteAll() throws Exception {
-		Connection c = dataSource.getConnection();
+	public void deleteAll() throws SQLException {
+		Connection c = null;
+		PreparedStatement ps = null;
 		
-		PreparedStatement ps = c.prepareStatement("DELETE FROM user");
-		
-		ps.execute();
-		
-		ps.close();
-		c.close();
+		try {
+			c = dataSource.getConnection();
+			
+			ps = c.prepareStatement("DELETE FROM user");
+			StatementStrategy strategy = new DeleteAllStatement();
+			ps = strategy.makePreparedStatement(c);
+			ps.executeUpdate();
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+		} finally {
+			ps.close();
+			c.close();
+		}
 	}
 	
 	public int getCount() throws Exception {
