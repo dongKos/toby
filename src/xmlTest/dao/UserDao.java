@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 public class UserDao {
@@ -14,12 +15,12 @@ public class UserDao {
 //		this.connectionMaker = connectionMaker;
 //	}
 	private SimpleDriverDataSource dataSource;
-	//DataSource ±¸ÇöÃ¼¸¦ »ç¿ëÇØ¼­ connection±¸Çö
+	//DataSource ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ connectionï¿½ï¿½ï¿½ï¿½
 	public void setDataSource(SimpleDriverDataSource dataSource) {
 		this.dataSource = dataSource;
 	}
 	
-	public void set(User user) throws Exception {
+	public void add(User user) throws Exception {
 		Connection c = dataSource.getConnection();
 		
 		PreparedStatement ps = c.prepareStatement("insert into user(id, name, pwd) values (?, ?, ?)");
@@ -39,16 +40,43 @@ public class UserDao {
 		PreparedStatement ps = c.prepareStatement("select * from user where id = ?");
 		ps.setString(1, id);
 		ResultSet rs = ps.executeQuery();
-		rs.next();
 		
-		User user = new User();
-		user.setId(rs.getString("id"));
-		user.setName(rs.getString("name"));
-		user.setPwd(rs.getString("pwd"));
+		User user = null;
+		if(rs.next()) {
+			user = new User();
+			user.setId(rs.getString("id"));
+			user.setName(rs.getString("name"));
+			user.setPwd(rs.getString("pwd"));
+		}
+		
+		if(user == null) throw new EmptyResultDataAccessException(1);
 		
 		ps.close();
 		c.close();
 		
 		return user;
+	}
+	
+	public void deleteAll() throws Exception {
+		Connection c = dataSource.getConnection();
+		
+		PreparedStatement ps = c.prepareStatement("DELETE FROM user");
+		
+		ps.execute();
+		
+		ps.close();
+		c.close();
+	}
+	
+	public int getCount() throws Exception {
+		Connection c = dataSource.getConnection();
+		PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM user");
+		ResultSet rs = ps.executeQuery();
+		rs.next();
+		int count = rs.getInt(1);
+		rs.close();
+		ps.close();
+		c.close();
+		return count;
 	}
 }

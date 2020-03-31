@@ -6,6 +6,13 @@ public class User {
 	String pwd;
 	
 	public User() {}
+	
+	public User(String id, String name, String pwd) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.pwd = pwd;
+	}
 	public String getId() {
 		return id;
 	}
@@ -24,12 +31,5 @@ public class User {
 	public void setPwd(String pwd) {
 		this.pwd = pwd;
 	}
-	public User(String id, String name, String pwd) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.pwd = pwd;
-	}
-	
 	
 }
