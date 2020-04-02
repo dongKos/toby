@@ -16,26 +16,61 @@ public class UserDao {
 //		this.connectionMaker = connectionMaker;
 //	}
 	private SimpleDriverDataSource dataSource;
-	//DataSource 占쏙옙占쏙옙체占쏙옙 占쏙옙占쏙옙漫占� connection占쏙옙占쏙옙
-	public void setDataSource(SimpleDriverDataSource dataSource) {
+////	//DataSource 占쏙옙占쏙옙체占쏙옙 占쏙옙占쏙옙漫占� connection占쏙옙占쏙옙
+////	public void setDataSource(SimpleDriverDataSource dataSource) {
+////		this.dataSource = dataSource;
+////	}
+//	
+	public void setDataSource (SimpleDriverDataSource dataSource) {
+		//UserDao가 임시적으로 JdbcContext를 만드는 facotry 역할을 한다
+		//userDao와 db 연결 정보는 사실 긴밀한 관계여도 되기 때문에 
+		//예외적으로 이렇게도 한다
+//		this.jdbcContext = new JdbcContext();
+//		this.jdbcContext.SetDataSource(dataSource);
 		this.dataSource = dataSource;
 	}
 	
-	public void add(User user) throws Exception {
-		Connection c = dataSource.getConnection();
+	private JdbcContext jdbcContext;
+	
+	public void setJdbcContext(JdbcContext jdbcContext) {
+		//xml 설정 파일을 이용해서
+		//userDao -> jdbcContext -> dataSource 로 하도록 DI 하는방식
+	
+		this.jdbcContext = jdbcContext;
+	}
+	
+	
+	
+	
+	public void add(final User user) throws Exception {
 		
-		PreparedStatement ps = c.prepareStatement("insert into user(id, name, pwd) values (?, ?, ?)");
-		ps.setString(1, user.getId());
-		ps.setString(2, user.getName());
-		ps.setString(3, user.getPwd());
+		//3. local Class - can delete all class file
+		//매개변수 user를 final로 선언하면 내부클래스 에서도 접근할 수 있다.
+		class AddStatement implements StatementStrategy {
+//			User user;
+//			
+//			public AddStatement(User user) {
+//				this.user = user;
+//			}
+			@Override
+			public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+				PreparedStatement ps =
+						c.prepareStatement("insert into user(id, name, pwd) values(?, ?, ?)");
+				ps.setString(1, user.getId());
+				ps.setString(2, user.getName());
+				ps.setString(3, user.getPwd());
+				
+				return ps;
+			}
+		}
 		
-		ps.executeUpdate();
-		
-		ps.close();
-		c.close();
+//		StatementStrategy strategy = new AddStatement(user);
+		StatementStrategy strategy = new AddStatement();
+		jdbcContextWithStatementStrategy(strategy);
 	}
 	
 	public User get(String id) throws Exception {
+		//Connection c = dataSource.getConnection();
 		Connection c = dataSource.getConnection();
 		
 		PreparedStatement ps = c.prepareStatement("select * from user where id = ?");
@@ -58,26 +93,76 @@ public class UserDao {
 		return user;
 	}
 	
-	public void deleteAll() throws SQLException {
-		Connection c = null;
-		PreparedStatement ps = null;
+	public void deleteAll() throws Exception {
+		//1. original code
+//		Connection c = null;
+//		PreparedStatement ps = null;
+//		
+//		try {
+//			c = dataSource.getConnection();
+//			ps = c.prepareStatement("delete from user");
+//			ps.executeUpdate();
+//		} catch(SQLException e) {
+//			throw new SQLException();
+//		} finally {
+//			if(ps != null)  
+//			{
+//				try {ps.close();} catch (SQLException e) {}
+//			}
+//			if(c != null) 
+//			{
+//				try {c.close();} catch (SQLException e) {}
+//			}
+//		}
 		
-		try {
-			c = dataSource.getConnection();
-			
-			ps = c.prepareStatement("DELETE FROM user");
-			StatementStrategy strategy = new DeleteAllStatement();
-			ps = strategy.makePreparedStatement(c);
-			ps.executeUpdate();
-			
-		} catch(SQLException e) {
-			e.printStackTrace();
-		} finally {
-			ps.close();
-			c.close();
-		}
+		//2. deal with interface, method - a lot of class 
+//		StatementStrategy strategy = new DeleteAllStatement();
+//		jdbcContextWithStatementStrategy(strategy);
+		
+		
+		//4. 익명 내부 클래스
+//		jdbcContextWithStatementStrategy(
+//			new StatementStrategy() {
+//				@Override
+//				public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+//					return c.prepareStatement("delete from user");
+//				}
+//			}
+//		);
+		
+		//di 받은  jdbcContext bean을 이용
+//		this.jdbcContext.workWithStatementStrategy(
+//			new StatementStrategy() {
+//				@Override
+//				public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+//					return c.prepareStatement("delete from user");
+//				}
+//			}
+//		);
+		
+		//템플릿/ 콜백패턴 - 클래스 내부에 템플릿 존재
+		//executeSql("delete from user");
+		
+		//jdbcContext 에서 콜백을 전부 관리
+		this.jdbcContext.executeSql("delete from user");
 	}
 	
+	//클래스 내부에 템플릿 존재
+	private void executeSql(final String query) throws Exception{
+		this.jdbcContext.workWithStatementStrategy(
+			new StatementStrategy() {
+				@Override
+				public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+					return c.prepareStatement(query);
+				}
+			}
+		);
+		
+	}
+
+
+
+
 	public int getCount() throws Exception {
 		Connection c = dataSource.getConnection();
 		PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM user");
@@ -88,5 +173,22 @@ public class UserDao {
 		ps.close();
 		c.close();
 		return count;
+	}
+	
+	public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+		Connection c = null;
+		PreparedStatement ps = null;
+		
+		try {
+			c = dataSource.getConnection();
+			ps = stmt.makePreparedStatement(c);
+			ps.executeUpdate();
+			
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			if(ps != null) try {ps.close();} catch (SQLException e) {}
+			if(c != null) try {c.close();} catch (SQLException e) {}
+		}
 	}
 }
