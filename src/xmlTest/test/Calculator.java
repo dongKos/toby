@@ -46,13 +46,13 @@ public class Calculator {
 		
 		//콜백에서 bufferedReader 생성과 ,라인별 계산도 담당
 		LineCallback sumCallback = 
-			new LineCallback () {
+			new LineCallback<Integer> () {
 				@Override
-				public int doSomethingWithLine(String line, int value) {
+				public Integer doSomethingWithLine(String line, Integer value) {
 					return value + Integer.valueOf(line);
-				} 
+				}
 		};
-		return lineReadTemplte(filePath, sumCallback, 0);
+		return lineReadTemplate(filePath, sumCallback, 0);
 	}
 	
 	public int calcMultiply(String numFilePath) throws IOException {
@@ -73,14 +73,25 @@ public class Calculator {
 //		return fileReadTemplate(numFilePath, multiplyCallback);
 		
 		LineCallback multiplyCallback = 
-			new LineCallback (){
+			new LineCallback<Integer> (){
 				@Override
-				public int doSomethingWithLine(String line, int value) {
+				public Integer doSomethingWithLine(String line, Integer value) {
 					return value * Integer.valueOf(line);
 				}
-			
 		};
-		return lineReadTemplte(numFilePath, multiplyCallback, 1);
+		return lineReadTemplate(numFilePath, multiplyCallback, 1);
+	}
+	
+	public String concatenate(String filePath) throws IOException {
+		LineCallback<String> concatenateCallback =
+			new LineCallback<String> () {
+				@Override
+				public String doSomethingWithLine(String line, String value) {
+					return value + line;
+				}
+		};
+		return lineReadTemplate(filePath, concatenateCallback, "");
+		
 	}
 	
 
@@ -102,15 +113,15 @@ public class Calculator {
 		return ret;
 	}
 	
-	public int lineReadTemplte(String filePath, LineCallback callback, int value) throws IOException {
+	public <T> T lineReadTemplate(String filePath, LineCallback callback, T value) throws IOException {
 		BufferedReader br = null;
-		Integer res = 0;
+		T res = null;
 		try {
 			br = new BufferedReader(new FileReader(filePath));
 			res = value;
 			String line = null;
 			while((line = br.readLine()) != null) {
-				res = callback.doSomethingWithLine(line, res);
+				res = (T) callback.doSomethingWithLine(line, res);
 			}
 		} catch(IOException e) {
 			System.out.println(e.getMessage());

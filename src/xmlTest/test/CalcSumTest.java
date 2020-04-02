@@ -32,6 +32,11 @@ public class CalcSumTest {
 		assertThat(calculator.calcMultiply(this.numFilePath), is(24));
 	}
 	
+	@Test
+	public void concatenate() throws IOException {
+		assertThat(calculator.concatenate(this.numFilePath), is("1234"));
+	}
+	
 	public static void main(String[] args) throws Exception {
 		JUnitCore.main("xmlTest.test.CalcSumTest");
 	}
