@@ -24,13 +24,13 @@
 		<property name="password" value="root" />
 	</bean>
 	
-	<bean id="jdbcContext" class="xmlTest.dao.JdbcContext">
+	<!-- <bean id="jdbcContext" class="xmlTest.dao.JdbcContext">
 		<property name="dataSource" ref="dataSource" />
-	</bean>
+	</bean> -->
 	
 	<bean id="userDao" class="xmlTest.dao.UserDao">
 		<property name="dataSource" ref="dataSource" />
-		<property name="jdbcContext" ref="jdbcContext" />
+		<!-- <property name="jdbcContext" ref="jdbcContext" /> -->
 	</bean>
 	
 </beans>

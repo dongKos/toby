@@ -27,7 +27,7 @@ public class Calculator {
 //			}
 //		}
 		
-		//ÄÝ¹é¿¡¼­ bufferedReader »ý¼º¸¸ ´ã´ç
+		//ï¿½Ý¹é¿¡ï¿½ï¿½ bufferedReader ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 //		BufferedReaderCallback sumCallback = 
 //			new BufferedReaderCallback() {
 //				@Override
@@ -44,8 +44,8 @@ public class Calculator {
 //		return fileReadTemplate(filePath, sumCallback);
 		
 		
-		//ÄÝ¹é¿¡¼­ bufferedReader »ý¼º°ú ,¶óÀÎº° °è»êµµ ´ã´ç
-		LineCallback sumCallback = 
+		//ï¿½Ý¹é¿¡ï¿½ï¿½ bufferedReader ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ,ï¿½ï¿½ï¿½Îºï¿½ ï¿½ï¿½êµµ ï¿½ï¿½ï¿½
+		LineCallback<Integer> sumCallback = 
 			new LineCallback<Integer> () {
 				@Override
 				public Integer doSomethingWithLine(String line, Integer value) {
@@ -72,7 +72,7 @@ public class Calculator {
 //		};
 //		return fileReadTemplate(numFilePath, multiplyCallback);
 		
-		LineCallback multiplyCallback = 
+		LineCallback<Integer> multiplyCallback = 
 			new LineCallback<Integer> (){
 				@Override
 				public Integer doSomethingWithLine(String line, Integer value) {
@@ -91,9 +91,7 @@ public class Calculator {
 				}
 		};
 		return lineReadTemplate(filePath, concatenateCallback, "");
-		
 	}
-	
 
 	public int fileReadTemplate(String filePath, BufferedReaderCallback callback) {
 		BufferedReader br = null;
