@@ -6,10 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+
+import xmlTest.exception.DuplicateUserIdException;
 
 public class UserDaoJdbc implements UserDao{
 
@@ -67,7 +68,7 @@ public class UserDaoJdbc implements UserDao{
 		
 	};
 	
-	public void add(final User user) throws DuplicateKeyException{
+	public void add(final User user) {
 		//3. local Class - can delete all class file
 //		매개변수 user를 final로 선언하면 내부클래스 에서도 접근할 수 있다.
 //		class AddStatement implements StatementStrategy {

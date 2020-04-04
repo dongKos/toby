@@ -26,10 +26,10 @@ public class UserDaoTest {
 	private ApplicationContext context;
 	
 	@Autowired
-	private UserDaoJdbc dao;
+	private UserDao dao;
 	
 	@Autowired
-	private javax.sql.DataSource dataSource;
+	private DataSource dataSource;
 	
 	User user1 = new User("id01", "name01", "pwd01");
 	User user2 = new User("id02", "name02", "pwd02");
@@ -116,9 +116,9 @@ public class UserDaoTest {
 	}
 	
 	
-	//»óÀ§ Å¬·¡½ºÀÎ DataAccessException  ¿¡¼­
-	//¼­ºê Å¬·¡½ºÀÎ DuplicateKeyException À¸·Î ¹Ù²ÞÀ¸·Î¼­
-	//´õ Á¤È®ÇÑ Å×½ºÆ® °¡´É
+	//ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ DataAccessException  ï¿½ï¿½ï¿½ï¿½
+	//ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ DuplicateKeyException ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½ï¿½ï¿½Î¼ï¿½
+	//ï¿½ï¿½ ï¿½ï¿½È®ï¿½ï¿½ ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 	@Test (expected=DuplicateKeyException.class) 
 	public void duplicateKey() {
 		dao.deleteAll();
