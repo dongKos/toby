@@ -9,8 +9,8 @@ public class DaoFactory {
 	
 	@Bean
 	public UserDao userDao() {
-		UserDao userDao = new UserDao();
-		userDao.setDataSource(dataSource());
+		UserDao userDao = new UserDaoJdbc();
+		//userDao.setDataSource(dataSource());
 		return userDao;
 	}
 
