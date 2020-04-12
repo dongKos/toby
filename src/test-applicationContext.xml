@@ -24,13 +24,26 @@
 		<property name="password" value="root" />
 	</bean>
 	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="mailSender" class="toby.user.service.DummyMailSender">
+	</bean>
+	
 	<!-- <bean id="jdbcContext" class="xmlTest.dao.JdbcContext">
 		<property name="dataSource" ref="dataSource" />
 	</bean> -->
 	
-	<bean id="userDao" class="xmlTest.dao.UserDaoJdbc">
+	<bean id="userDao" class="toby.user.dao.UserDaoJdbc">
 		<property name="dataSource" ref="dataSource" />
 		<!-- <property name="jdbcContext" ref="jdbcContext" /> -->
+	</bean>
+	
+	<bean id="userService" class="toby.user.service.UserService">
+		<property name="userDao" ref="userDao" />
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="mailSender" ref="mailSender" />
 	</bean>
 	
 </beans>
