@@ -50,8 +50,6 @@ public class UserDaoJdbc implements UserDao{
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 	
-	
-	
 	//rowMapper 콜백도 하나로 만들어서 공유해버리기!
 	private RowMapper<User> userMapper = 
 		new RowMapper<User> () {
