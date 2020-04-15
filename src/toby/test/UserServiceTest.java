@@ -2,6 +2,7 @@ package toby.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,12 +28,17 @@ import toby.user.domain.User;
 import toby.user.exception.TestUserServiceException;
 import toby.user.service.TestUserService;
 import toby.user.service.UserService;
+import toby.user.service.UserServiceImpl;
+import toby.user.service.UserServiceTx;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations="/test-applicationContext.xml")
 public class UserServiceTest {
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	UserServiceImpl userServiceImpl;
 	
 	@Autowired
 	UserDao userDao;
@@ -54,11 +60,11 @@ public class UserServiceTest {
 	@Before
 	public void setUp() {
 		users = Arrays.asList(
-					new User("user1", "name1", "pwd01", "email01@email.co.kr", Level.BASIC, MIN_LOGCONUT_FOR_SILVER - 1, 0),
-					new User("user2", "name2", "pwd02", "email02@email.co.kr", Level.BASIC, MIN_LOGCONUT_FOR_SILVER, 0),
-					new User("user3", "name3", "pwd03", "email03@email.co.kr", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD - 1),
-					new User("user4", "name4", "pwd04", "email04@email.co.kr", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
-					new User("user5", "name5", "pwd05", "email05@email.co.kr", Level.GOLD, 100, Integer.MAX_VALUE)
+				new User("user1", "name1", "pwd01", "email01@email.co.kr", Level.BASIC, MIN_LOGCONUT_FOR_SILVER - 1, 0),
+				new User("user2", "name2", "pwd02", "email02@email.co.kr", Level.BASIC, MIN_LOGCONUT_FOR_SILVER, 0),
+				new User("user3", "name3", "pwd03", "email03@email.co.kr", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD - 1),
+				new User("user4", "name4", "pwd04", "email04@email.co.kr", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
+				new User("user5", "name5", "pwd05", "email05@email.co.kr", Level.GOLD, 100, Integer.MAX_VALUE)
 				);
 	}
 	
@@ -72,7 +78,7 @@ public class UserServiceTest {
 		}
 		
 		MockMailSender mockMailSender = new MockMailSender();
-		userService.setMailSender(mockMailSender);
+		userServiceImpl.setMailSender(mockMailSender);
 		
 		userService.upgradeLevels();
 		
@@ -96,26 +102,27 @@ public class UserServiceTest {
 	
 	@Test
 	public void upgradeAllOrNothing() throws Exception {
-		UserService testUserService = new TestUserService(users.get(3).getId());
-		
-		testUserService.setUserDao(this.userDao);
-		testUserService.setTransactionManager(transactionManager);
-		
+		TestUserService testUserService = new TestUserService(users.get(3).getId());
+		testUserService.setUserDao(userDao);
 		testUserService.setMailSender(mailSender);
+		
+		UserServiceTx txUserService = new UserServiceTx();
+		txUserService.setTransactionManager(transactionManager);
+		txUserService.setUserService(testUserService);
 		
 		userDao.deleteAll();
 		for(User user: users) userDao.add(user);
 		
 		try {
-			testUserService.upgradeLevels();
-			
+			txUserService.upgradeLevels();
+			fail("TestUserServiceException expected");
 		} catch(TestUserServiceException e) {
 			
 		}
 		
 		checkLevelUpgraded(users.get(1), false);
 	}
-
+	
 	private void checkLevelUpgraded(User user, boolean upgraded) {
 		User userUpdate = userDao.get(user.getId());
 		
@@ -125,7 +132,7 @@ public class UserServiceTest {
 			assertThat(userUpdate.getLevel(), is(user.getLevel()));
 		}
 	}
-
+	
 	private void checkLevel(User user, Level expectedLevel) {
 		User userUpdate = userDao.get(user.getId());
 		assertThat(userUpdate.getLevel(), is(expectedLevel));
@@ -137,12 +144,12 @@ public class UserServiceTest {
 		public List<String> getRequests() {
 			return requests;
 		}
-
+		
 		@Override
 		public void send(SimpleMailMessage msg) throws MailException {
 			requests.add(msg.getTo()[0]);
 		}
-
+		
 		@Override
 		public void send(SimpleMailMessage[] arg0) throws MailException {
 			// TODO Auto-generated method stub

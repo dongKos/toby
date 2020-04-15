@@ -7,7 +7,7 @@ import toby.user.domain.Level;
 import toby.user.domain.User;
 import toby.user.exception.TestUserServiceException;
 
-public class TestUserService extends UserService{
+public class TestUserService extends UserServiceImpl{
 	private String id;
 	
 	public TestUserService(String id) {
