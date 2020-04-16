@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import toby.test.proxy.TransactionHandler;
 import toby.user.dao.UserDao;
 import toby.user.domain.Level;
 import toby.user.domain.User;
@@ -35,7 +37,6 @@ import toby.user.exception.TestUserServiceException;
 import toby.user.service.TestUserService;
 import toby.user.service.UserService;
 import toby.user.service.UserServiceImpl;
-import toby.user.service.UserServiceTx;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations="/test-applicationContext.xml")
@@ -99,11 +100,11 @@ public class UserServiceTest {
 //		assertThat(request.get(0), is(users.get(1).getEmail()));
 //		assertThat(request.get(1), is(users.get(3).getEmail()));
 		
-		//6-13 - ¸ñ ¿ÀºêÁ§Æ®¸¦ ÀÌ¿ëÇÑ °í¸³µÈ Å×½ºÆ® : Å×½ºÆ® ¼º´É Çâ»ó
+		//6-13 - ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ® : ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 		/*
-		 * [´ÜÀ§ Å×½ºÆ®]
-		 *  Å×½ºÆ® ´ë»ó Å¬·¡½º¸¦ ¸ñ ¿ÀºêÁ§Æ® µîÀÇ Å×½ºÆ® ´ë¿ªÀ» ÀÌ¿ëÇØ ÀÇÁ¸ ¿ÀºêÁ§Æ®³ª
-		 * ¿ÜºÎ ¸®¼Ò½º¸¦ »ç¿ëÇÏÁö ¾Êµµ·Ï °í¸³½ÃÄÑ¼­ Å×½ºÆ®ÇÏ´Â °Í
+		 * [ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ®]
+		 *  ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ® ï¿½ë¿ªï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½
+		 * ï¿½Üºï¿½ ï¿½ï¿½ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¼ï¿½ ï¿½×½ï¿½Æ®ï¿½Ï´ï¿½ ï¿½ï¿½
 		 */
 		UserServiceImpl userServiceImpl = new UserServiceImpl();
 		
@@ -126,7 +127,7 @@ public class UserServiceTest {
 //		assertThat(request.get(1), is(users.get(3).getEmail()));
 		
 		
-		//6-14 Mockito framework¸¦ ÀÌ¿ëÇÑ Mock ¿ÀºêÁ§Æ® »ý¼º
+		//6-14 Mockito frameworkï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ Mock ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 		UserDao mockUserDao = mock(UserDao.class);
 		when(mockUserDao.getAll()).thenReturn(this.users);
 		userServiceImpl.setUserDao(mockUserDao);
@@ -164,9 +165,17 @@ public class UserServiceTest {
 		testUserService.setUserDao(userDao);
 		testUserService.setMailSender(mailSender);
 		
-		UserServiceTx txUserService = new UserServiceTx();
-		txUserService.setTransactionManager(transactionManager);
-		txUserService.setUserService(testUserService);
+//		UserServiceTx txUserService = new UserServiceTx();
+//		txUserService.setTransactionManager(transactionManager);
+//		txUserService.setUserService(testUserService);
+		
+		//6-28
+		TransactionHandler txHandler = new TransactionHandler();
+		txHandler.setTarget(testUserService);
+		txHandler.setTransactionManager(transactionManager);
+		txHandler.setPattern("upgradeLevels");
+		UserService txUserService = (UserService) Proxy.newProxyInstance(
+				getClass().getClassLoader(), new Class[] {UserService.class}, txHandler);
 		
 		userDao.deleteAll();
 		for(User user: users) userDao.add(user);
