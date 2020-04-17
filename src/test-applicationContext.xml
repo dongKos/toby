@@ -40,9 +40,17 @@
 		<!-- <property name="jdbcContext" ref="jdbcContext" /> -->
 	</bean>
 	
-	<bean id="userService" class="toby.user.service.UserServiceTx">
+	<!-- <bean id="userService" class="toby.user.service.UserServiceTx">
 		<property name="transactionManager" ref="transactionManager" />
 		<property name="userService" ref="userServiceImpl" />
+	</bean> -->
+	
+	<!-- 6-36 -->
+	<bean id="userService" class="toby.user.service.TxProxyFactoryBean">
+		<property name="target" ref="userServiceImpl" />
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="pattern" value="upgradeLevels" />
+		<property name="serviceInterface" value="toby.user.service.UserService" />
 	</bean>
 	
 	<bean id="userServiceImpl" class="toby.user.service.UserServiceImpl">
