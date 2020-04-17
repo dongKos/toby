@@ -1,4 +1,4 @@
-package toby.test.proxy;
+package toby.proxy;
 
 public interface Hello {
 	String sayHello(String name);

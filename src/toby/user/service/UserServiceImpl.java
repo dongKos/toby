@@ -6,17 +6,16 @@ import javax.sql.DataSource;
 
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.annotation.Transactional;
 
 import toby.user.dao.UserDao;
 import toby.user.domain.Level;
 import toby.user.domain.User;
 
+@Transactional(readOnly=false)
 public class UserServiceImpl implements UserService{
-	UserDao userDao;
+	UserDao userDao;	
 	
 	private DataSource dataSource;
 	private PlatformTransactionManager transactionManager;
@@ -115,8 +114,27 @@ public class UserServiceImpl implements UserService{
 
 	@Override
 	public void add(User user) {
-		// TODO Auto-generated method stub
-		
+		userDao.add(user);
+	}
+
+	@Override
+	public User get(String id) {
+		return userDao.get(id);
+	}
+
+	@Override
+	public List<User> getAll() {
+		return userDao.getAll();
+	}
+
+	@Override
+	public void deleteAll() {
+		userDao.deleteAll();
+	}
+
+	@Override
+	public void update(User user) {
+		userDao.update(user);
 	}
 
 }

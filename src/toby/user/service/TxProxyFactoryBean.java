@@ -5,7 +5,8 @@ import java.lang.reflect.Proxy;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import toby.test.proxy.TransactionHandler;
+import toby.proxy.TransactionHandler;
+
 
 public class TxProxyFactoryBean implements FactoryBean<Object> {
 	

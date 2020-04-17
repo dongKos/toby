@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -28,13 +28,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 
 import toby.user.dao.UserDao;
 import toby.user.domain.Level;
 import toby.user.domain.User;
 import toby.user.exception.TestUserServiceException;
-import toby.user.service.TestUserService;
-import toby.user.service.TxProxyFactoryBean;
 import toby.user.service.UserService;
 import toby.user.service.UserServiceImpl;
 
@@ -44,8 +43,8 @@ public class UserServiceTest {
 	@Autowired
 	UserService userService;
 	
-	@Autowired
-	UserServiceImpl userServiceImpl;
+//	@Autowired
+//	UserServiceImpl userServiceImpl;
 	
 	@Autowired
 	UserDao userDao;
@@ -150,7 +149,6 @@ public class UserServiceTest {
 		List<SimpleMailMessage> mailMessages = mailMessageArg.getAllValues();
 		assertThat(mailMessages.get(0).getTo()[0], is(users.get(1).getEmail()));
 		assertThat(mailMessages.get(1).getTo()[0], is(users.get(3).getEmail()));
-		
 	}
 		
 	
@@ -192,29 +190,50 @@ public class UserServiceTest {
 	
 	
 	//6-37
+//	@Autowired
+//	ApplicationContext context;
+//	@Test
+//	@DirtiesContext
+//	public void upgradeAllorNothing() throws Exception {
+//		TestUserService testUserService = new
+//			TestUserService(users.get(3).getId());
+//		testUserService.setUserDao(userDao);
+//		testUserService.setMailSender(mailSender);
+//		
+////		TxProxyFactoryBean txProxyFactoryBean = 
+////			context.getBean("&userService", TxProxyFactoryBean.class);
+////		txProxyFactoryBean.setTarget(testUserService);
+//		
+//		//6-48
+//		ProxyFactoryBean txProxyFactoryBean = 
+//			context.getBean("&userService", ProxyFactoryBean.class);
+//		UserService txUSerService = (UserService) txProxyFactoryBean.getObject();
+//		
+//		userDao.deleteAll();
+//		for(User user: users) userDao.add(user);
+//		
+//		try {
+//			txUSerService.upgradeLevels();
+//			fail("TestUserServiceException expected");
+//		} catch(TestUserServiceException e) {
+//			
+//		}
+//		
+//		checkLevelUpgraded(users.get(1), false);
+//	}
+	
 	@Autowired
-	ApplicationContext context;
+	UserService testUserService;
+	
 	@Test
-	@DirtiesContext
-	public void upgradeAllorNothing() throws Exception {
-		TestUserService testUserService = new
-			TestUserService(users.get(3).getId());
-		testUserService.setUserDao(userDao);
-		testUserService.setMailSender(mailSender);
-		
-		TxProxyFactoryBean txProxyFactoryBean = 
-			context.getBean("&userService", TxProxyFactoryBean.class);
-		txProxyFactoryBean.setTarget(testUserService);
-		UserService txUSerService = (UserService) txProxyFactoryBean.getObject();
-		
+	public void upgradeAllOrNothing() throws Exception {
 		userDao.deleteAll();
 		for(User user: users) userDao.add(user);
 		
 		try {
-			txUSerService.upgradeLevels();
+			this.testUserService.upgradeLevels();
 			fail("TestUserServiceException expected");
-		} catch(TestUserServiceException e) {
-			
+		}  catch (TestUserServiceException e) {
 		}
 		
 		checkLevelUpgraded(users.get(1), false);
@@ -250,7 +269,6 @@ public class UserServiceTest {
 		@Override
 		public void send(SimpleMailMessage[] arg0) throws MailException {
 			// TODO Auto-generated method stub
-			
 		}
 		
 	}
@@ -283,10 +301,35 @@ public class UserServiceTest {
 		public int getCount() {throw new UnsupportedOperationException();}
 		public void add(User user) {throw new UnsupportedOperationException();}
 	}
-	
-	
-	
-	
-	
 
+	@Test (expected=TransientDataAccessResourceException.class) 
+	public void readOnlyTransactionAttribute() {
+		testUserService.getAll();
+	}
+
+	static class TestUserService extends UserServiceImpl {
+		private String id = "user4";
+		
+		protected void upgradeLevel(User user) {
+			if(user.getId().equals(this.id)) throw new TestUserServiceException();
+			super.upgradeLevel(user);
+		}
+		
+		public List<User> getAll() {
+			for(User user: super.getAll()) {
+				super.update(user);
+			}
+			
+			return null;
+		}
+	}
+	
+	
+	@Test
+	@Transactional(readOnly=true)
+	public void transactionSync() {
+		userDao.deleteAll();
+		userService.add(users.get(0));
+		userService.add(users.get(1));
+	}
 }

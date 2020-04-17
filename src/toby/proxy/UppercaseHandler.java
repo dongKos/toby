@@ -1,10 +1,10 @@
-package toby.test.proxy;
+package toby.proxy;
 
 import java.lang.reflect.Method;
 
 import net.sf.cglib.proxy.InvocationHandler;
 
-public class UppercaseHandler implements InvocationHandler{
+public class UppercaseHandler implements InvocationHandler {
 
 	
 //	Hello target;

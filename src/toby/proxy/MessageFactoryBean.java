@@ -1,4 +1,4 @@
-package toby.test.proxy;
+package toby.proxy;
 
 import org.springframework.beans.factory.FactoryBean;
 

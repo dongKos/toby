@@ -1,4 +1,4 @@
-package toby.test.proxy;
+package toby.proxy;
 
 public class HelloTarget implements Hello{
 

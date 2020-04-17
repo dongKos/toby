@@ -1,4 +1,4 @@
-package toby.test.proxy;
+package toby.proxy;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

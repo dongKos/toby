@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans">
 
 	<!-- 6-32 factory bean -->
-	<bean id="message" class="toby.test.proxy.MessageFactoryBean">
+	<bean id="message" class="toby.proxy.MessageFactoryBean">
 		<property name="text" value="Factory Bean" />
 	</bean>
 	

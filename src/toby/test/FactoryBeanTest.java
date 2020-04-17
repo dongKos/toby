@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import toby.test.proxy.MessageFactoryBean;
+import toby.proxy.MessageFactoryBean;
 import toby.user.domain.Message;
 
 
