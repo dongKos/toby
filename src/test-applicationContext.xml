@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!-- <beans xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"> -->
 <beans xsi:schemaLocation="http://www.springframework.org/schema/beans 
-	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
-	http://www.springframework.org/schema/aop 
-	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
-	http://www.springframework.org/schema/tx 
-	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd" 
-	xmlns:tx="http://www.springframework.org/schema/tx" 
-	xmlns:aop="http://www.springframework.org/schema/aop" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xmlns="http://www.springframework.org/schema/beans">
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd  
+        http://www.springframework.org/schema/tx  
+        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd 
+        http://www.springframework.org/schema/context  
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/jdbc  
+        http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+        xmlns="http://www.springframework.org/schema/beans">
+	
+    <jdbc:embedded-database id="embeddedDatabase" type="HSQL">
+          <jdbc:script location="classpath:toby/user/sqlservice/updatable/sqlRegistrySchema.sql" />
+    </jdbc:embedded-database>
+	
 	<!-- <aop:config>
 		<aop:pointcut expression="execution(* *..*ServiceImpl.upgrade*(..))" id="transactionPointcut" />
 		<aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut" />
@@ -34,7 +44,7 @@
 		setter메소드의 타입을 스프링이 읽고 자동으로 변화해준다	-->
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
 		<property name="driverClass" value="com.mysql.jdbc.Driver" />
-		<property name="url" value="jdbc:mysql://localhost:3306/testdb?characterEncoding=UTF-8&amp;serverTimezone=UTC&amp;userSSL=false" />
+		<property name="url" value="jdbc:mysql://localhost/testdb?characterEncoding=UTF-8"/>
 		<property name="username" value="root" />
 		<property name="password" value="root" />
 	</bean>
@@ -49,45 +59,58 @@
 	<!-- <bean id="jdbcContext" class="xmlTest.dao.JdbcContext">
 		<property name="dataSource" ref="dataSource" />
 	</bean> -->
+	<!-- <bean id="sqlService" class="toby.user.sqlService.SimpleSqlService">
+		<property name="sqlMap">
+		 	<map>
+		 		<entry key="userAdd" value="INSERT INTO USER VALUES(?, ?, ?, ?, ?, ?, ?)" />
+		 		<entry key="userGet" value="SELECT * FROM USER WHERE ID=?" />
+		 		<entry key="userGetAll" value="SELECT * FROM USER" />
+		 		<entry key="userDeleteAll" value="DELETE FROM USER" />
+		 		<entry key="userGetCount" value="SELECT COUNT(*) FROM USER" />
+		 		<entry key="userUpdate" value="UPDATE USER SET name=?, pwd=?, EMAIL=?, LEVEL=?, LOGIN=?, RECOMMEND=? WHERE id=?" />
+		 	</map>
+		 </property>	
+	</bean> -->
+	
+	<!-- <bean id="sqlService" class="toby.user.sqlservice.DefaultSqlService" >
+		<property name="sqlmapFile" value="sqlmap.xml" />
+		<property name="sqlReader" ref="sqlReader" />
+		<property name="sqlRegistry" ref="sqlRegistry" />
+	</bean> -->
+	<bean id="sqlService" class="toby.user.sqlservice.OxmSqlService">
+		<property name="unmarshaller" ref="unmarshaller" />
+		<!-- <property name="sqlmap" value="classpath:toby/user/dao/sqlmap.xml" /> -->
+		<property name="sqlRegistry" ref="sqlRegistry" />
+	</bean>
+	
+	<bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="contextPath" value="toby.user.sqlservice.jaxb" />
+	</bean>
+	
+	<bean id="sqlReader" class="toby.user.sqlservice.JaxbXmlSqlReader">
+		<!-- <property name="sqlmapFile" value="sqlmap.xml" /> -->
+	</bean>	
+	<!-- <bean id="sqlRegistry" class="toby.user.sqlservice.HashMapSqlRegistry"></bean> -->
+	<!-- <bean id="sqlRegistry" class="toby.user.sqlservice.updatable.ConcurrentHashMapSqlRegistry"></bean> -->
+	
+  	<bean id="sqlRegistry" class="toby.user.sqlservice.updatable.EmbeddedDbSqlRegistry">
+          <property name="dataSource" ref="embeddedDatabase"></property>
+    </bean>
 	
 	<bean id="userDao" class="toby.user.dao.UserDaoJdbc">
 		<property name="dataSource" ref="dataSource" />
-		<!-- <property name="jdbcContext" ref="jdbcContext" /> -->
+		<property name="sqlService" ref="sqlService" />
+		<!-- 개별 sql 프로퍼티 방식 -->
+<!-- 		<property name="sqlAdd" value="insert into user values (?, ?, ?, ?, ?, ?, ?)" />
+ -->		<!-- <property name="jdbcContext" ref="jdbcContext" /> -->
+ 
+ 	<!-- map property 방식 -->
 	</bean>
-	
-	<!-- <bean id="userService" class="toby.user.service.UserServiceTx">
-		<property name="transactionManager" ref="transactionManager" />
-		<property name="userService" ref="userServiceImpl" />
-	</bean> -->
-	
-	<!-- 6-36 -->
-	<!-- <bean id="userService" class="toby.user.service.TxProxyFactoryBean">
-		<property name="target" ref="userServiceImpl" />
-		<property name="transactionManager" ref="transactionManager" />
-		<property name="pattern" value="upgradeLevels" />
-		<property name="serviceInterface" value="toby.user.service.UserService" />
-	</bean> -->
-	
-	<!-- <bean id="userServiceImpl" class="toby.user.service.UserServiceImpl">
-		<property name="userDao" ref="userDao" />
-		<property name="mailSender" ref="mailSender" />
-	</bean> -->
-	
-	<!-- 6-52 -->
-	<!-- <bean id="transactionPointcut" 
-		class="toby.proxy.NameMatchClassMethodPointcut">
-		<property name="mappedClassName" value="*ServiceImpl" />
-		<property name="mappedName" value="upgrade*" />
-	</bean> -->
 	
 	<!-- 6-65 -->
 	<bean id="testUserService" 
 		class="toby.test.UserServiceTest$TestUserService"
 		parent="userService" />
-	<!-- <bean id="testUserService" class="toby.user.service.TestUserService"
-		parent="userService">
-	</bean> -->
-		
 	<!-- 6-53 -->
 	<bean id="userService" class="toby.user.service.UserServiceImpl">
 		<property name="userDao" ref="userDao" />
@@ -96,49 +119,13 @@
 	
 	<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
 	
-	<!-- 6-57 -->
-	<!-- <bean id="transactionPointcut" 
-		class="toby.proxy.NameMatchClassMethodPointcut">
-		<property name="mappedClassName" value="*NotServiceImpl" />
-		<property name="mappedName" value="upgrade*" />
-	</bean> -->
-	<!-- <bean id="transactionPointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
-		<property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))" />
-	</bean> -->
-	
-	<!-- <bean class="toby.user.service.TransactionAdvice" id="transactionAdvice">
-		<property name="transactionManager" ref="transactionManager"/>
-	</bean> -->
-	
-	<!-- <bean id="transactionAdvisor"
-        class="org.springframework.aop.support.DefaultPointcutAdvisor">
-        <property name="advice" ref="transactionAdvice" />
-        <property name="pointcut" ref="transactionPointcut" />
-	</bean> -->
-	
-	
-	<!-- <bean class="org.springframework.aop.support.DefaultPointcutAdvisor"
-		id="transactionAdvisor">
-		<property name="advice" ref="transactionAdvice" />
-		<property name="pointcut" ref="transactionPointcut" />
-	</bean> -->
-	
-	<!-- <tx:advice transaction-manager="transactionManager">
-		<tx:attributes>
-			<tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
-			<tx:method name="upgrade*" propagation="REQUIRES_NEW"
-				isolation="SERIALIZABLE"/>
-			<tx:method name="*" propagation="REQUIRED"/>
-		</tx:attributes>
-	</tx:advice>	 -->
-	
 	<!-- 6-78 -->
 	<aop:config>
 		<!-- <aop:pointcut expression="execution(* *..*ServiceImpl.*(..))" id="transactionPointcut" /> -->
 		<aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
 	</aop:config>
 	
-	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+	<tx:advice id="transactionAdvice">
 		<tx:attributes>
 			<!-- <tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
 			<tx:method name="upgrade*" propagation="REQUIRES_NEW"
@@ -149,6 +136,7 @@
 		</tx:attributes>
 	</tx:advice>
 	<tx:annotation-driven/>
+	<!-- <context:annotation-config /> -->
 	
 		
 </beans>

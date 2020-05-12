@@ -11,28 +11,30 @@ import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.PlatformTransactionManager;
 
+import toby.AppContext;
 import toby.user.dao.UserDao;
 import toby.user.domain.Level;
 import toby.user.domain.User;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations="/test-applicationContext.xml")
+@ActiveProfiles("test")
+@ContextConfiguration(classes= AppContext.class)
 public class UserDaoTest {
 	
-	@Autowired
-	private ApplicationContext context;
+//	@Autowired
+//	private ApplicationContext context;
 	
 	@Autowired
-	private UserDao dao;
+	UserDao dao; 
 	
 	@Autowired
 	private javax.sql.DataSource dataSource;
@@ -43,14 +45,14 @@ public class UserDaoTest {
 	
 	@Before 
 	public void setUp() {
-		this.dao = context.getBean("userDao", UserDao.class);
+//		this.dao = context.getBean("userDao", UserDaoJdbc.class);
 		this.user1 = new User("id01", "name01", "pwd01","email01@email.co.kr", Level.BASIC, 1, 0);
 		this.user2 = new User("id02", "name02", "pwd02","email02@email.co.kr", Level.SILVER, 55, 10);
 		this.user3 = new User("id03", "name03", "pwd03","email03@email.co.kr", Level.GOLD, 100, 40);
 	}
 	
 	@Test(expected=EmptyResultDataAccessException.class)
-	public void getUserFailure() throws Exception {
+	public void getUserFailure() throws SQLException{
 		dao.deleteAll();
 		assertThat(dao.getCount(), is(0));
 		
@@ -58,8 +60,7 @@ public class UserDaoTest {
 	}
 	
 	@Test
-	public void addAndGet() throws Exception {
-		
+	public void addAndGet()   {
 		dao.deleteAll();
 		assertThat(dao.getCount(), is(0));
 		
@@ -75,8 +76,7 @@ public class UserDaoTest {
 	}
 	
 	@Test
-	public void count() throws Exception {
-		
+	public void count()   {
 		dao.deleteAll();
 		assertThat(dao.getCount(), is(0));
 		
@@ -91,7 +91,7 @@ public class UserDaoTest {
 	}
 	
 	@Test
-	public void getAll() throws SQLException {
+	public void getAll()   {
 		dao.deleteAll();
 		
 		List<User> users0 = dao.getAll();
@@ -122,7 +122,7 @@ public class UserDaoTest {
 	//���� Ŭ������ DuplicateKeyException ���� �ٲ����μ�
 	//�� ��Ȯ�� �׽�Ʈ ����
 	@Test (expected=DuplicateKeyException.class) 
-	public void duplicateKey() {
+	public void duplicateKey()  {
 		dao.deleteAll();
 		
 		dao.add(user1);
@@ -130,7 +130,7 @@ public class UserDaoTest {
 	}
 	
 	@Test
-	public void sqlExceptionTranslator() {
+	public void sqlExceptionTranslator()  {
 		dao.deleteAll();
 		
 		try {
@@ -139,14 +139,14 @@ public class UserDaoTest {
 		} catch(DuplicateKeyException ex) {
 			SQLException sqlEx = (SQLException) ex.getRootCause();
 			SQLExceptionTranslator set =
-				new SQLErrorCodeSQLExceptionTranslator(this.dataSource);
+					new SQLErrorCodeSQLExceptionTranslator(this.dataSource);
 			assertThat(set.translate(null, null, sqlEx), 
-				is(DuplicateKeyException.class));
+					is(DuplicateKeyException.class));
 		}
 	}
 	
 	@Test
-	public void update() {
+	public void update()  {
 		dao.deleteAll();
 		dao.add(user1);
 		dao.add(user2);
@@ -174,9 +174,21 @@ public class UserDaoTest {
 		assertThat(user1.getLogin(), is(user2.getLogin()));
 		assertThat(user1.getRecommend(), is(user2.getRecommend()));
 	}
-
-	public static void main(String[] args) throws Exception {
+	
+	public static void main(String[] args)   {
 		JUnitCore.main("xmlTest.dao.UserDaoTest");
 	}
+	
+	
+	@Autowired 
+	DefaultListableBeanFactory bf;
+	
+	@Test
+	public void beans() {
+		for( String n : bf.getBeanDefinitionNames()) {
+			System.out.println(n + " \t " + bf.getBean(n).getClass().getName());
+		}
+	}
+	
 }
 

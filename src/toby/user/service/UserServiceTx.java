@@ -1,5 +1,7 @@
 package toby.user.service;
 
+import java.util.List;
+
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -7,7 +9,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import toby.user.domain.User;
 
 public class UserServiceTx implements UserService{
-	//Å¸±ê ¿ÀºêÁ§Æ®
+	//Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 	UserService userService;	
 	PlatformTransactionManager transactionManager;
 	
@@ -17,26 +19,46 @@ public class UserServiceTx implements UserService{
 	public void setUserService(UserService userService) {
 		this.userService = userService;
 	}
-
+	
 	
 	@Override
-	//¸Þ¼Òµå ±¸Çö
-	public void add(User user) {
-		userService.add(user);	//À§ÀÓ
+	//ï¿½Þ¼Òµï¿½ ï¿½ï¿½ï¿½ï¿½
+	public void add(User user)   {
+		userService.add(user);	//ï¿½ï¿½ï¿½ï¿½
 	}
-
+	
 	@Override
-	public void upgradeLevels() throws Exception {
+	public void upgradeLevels()   {
 		TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());
 		try {
 			userService.upgradeLevels();
 			
-			//ºÎ°¡±â´É ¼öÇà
+			//ï¿½Î°ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			this.transactionManager.commit(status);
 		} catch(RuntimeException e) {
 			this.transactionManager.rollback(status);
 			throw e;
 		}
+	}
+	@Override
+	public User get(String id)   {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public List<User> getAll()   {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void deleteAll()   {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void update(User user)   {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

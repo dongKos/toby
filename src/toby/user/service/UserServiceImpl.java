@@ -4,8 +4,10 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,33 +16,37 @@ import toby.user.domain.Level;
 import toby.user.domain.User;
 
 @Transactional(readOnly=false)
+@Service("userService")
 public class UserServiceImpl implements UserService{
+	
+	@Autowired
 	UserDao userDao;	
 	
-	private DataSource dataSource;
-	private PlatformTransactionManager transactionManager;
+//	private DataSource dataSource;
+//	private PlatformTransactionManager transactionManager;
+	@Autowired
 	private MailSender mailSender;
 	
 	public static final int MIN_LOGCONUT_FOR_SILVER = 50;
 	public static final int MIN_RECOMMEND_FOR_GOLD = 30;
-
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
+	
+//	public void setDataSource(DataSource dataSource) {
+//		this.dataSource = dataSource;
+//	}
 	
 	public void setUserDao(UserDao userDao) {
 		this.userDao = userDao;
 	}
 	
-	public void setTransactionManager(PlatformTransactionManager transactionManager) {
-		this.transactionManager = transactionManager;
-	}
+//	public void setTransactionManager(PlatformTransactionManager transactionManager) {
+//		this.transactionManager = transactionManager;
+//	}
 	
 	public void setMailSender(MailSender mailSender) {
 		this.mailSender = mailSender;
 	}
-
-	public void upgradeLevels() throws Exception {
+	
+	public void upgradeLevels()  {
 		List<User> users = userDao.getAll();
 		for (User user : users) {
 			if(canUpgradeLevel(user)) {
@@ -48,9 +54,9 @@ public class UserServiceImpl implements UserService{
 			}
 			
 		}
-
+		
 	}
-
+	
 	protected void upgradeLevel(User user) {
 		user.upgradeLevel();
 		
@@ -63,7 +69,7 @@ public class UserServiceImpl implements UserService{
 		userDao.update(user);
 		sendUpgradeEmail(user);
 	}
-
+	
 	private void sendUpgradeEmail(User user) {
 //		Properties props = new Properties();
 //		props.put("mail.smtp.host", "mail.ksug.org");
@@ -96,10 +102,10 @@ public class UserServiceImpl implements UserService{
 		
 		mailSender.send(mailMessage);
 	}
-
+	
 	private boolean canUpgradeLevel(User user) {
 		Level currentLevel = user.getLevel();
-
+		
 		switch (currentLevel) {
 		case BASIC:
 			return (user.getLogin() >= MIN_LOGCONUT_FOR_SILVER);
@@ -111,29 +117,29 @@ public class UserServiceImpl implements UserService{
 			throw new IllegalArgumentException("Unknown Level : " + currentLevel);
 		}
 	}
-
+	
 	@Override
-	public void add(User user) {
+	public void add(User user)   {
 		userDao.add(user);
 	}
-
+	
 	@Override
-	public User get(String id) {
+	public User get(String id)   {
 		return userDao.get(id);
 	}
-
+	
 	@Override
-	public List<User> getAll() {
+	public List<User> getAll()   {
 		return userDao.getAll();
 	}
-
+	
 	@Override
-	public void deleteAll() {
+	public void deleteAll()   {
 		userDao.deleteAll();
 	}
-
+	
 	@Override
-	public void update(User user) {
+	public void update(User user)   {
 		userDao.update(user);
 	}
 
