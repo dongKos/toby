@@ -16,7 +16,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class JaxbTest {
-
+	
 	@Test
 	public void readSqlmap() throws JAXBException, IOException {
 		String contextPath = Sqlmap.class.getPackage().getName();
